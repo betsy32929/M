@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>M夾紀錄 V166｜跨瀏覽器自動讀寫同步版</title>
+<title>M夾紀錄 V167｜回報主管備註・雲端上傳timeout修正版</title>
 <style>
 :root{
   --page1:#eef7ff; --page2:#fff4f9; --ink:#243042; --muted:#68778d;
@@ -5513,6 +5513,50 @@ body.settingsOnlyMode .topActions .topSettingBtn{
   margin-left:0!important;
   margin-right:auto!important;
 }
+
+
+/* V167：總表助理收件日期再縮 1pt；Supabase 狀態改小標籤並維持單行 */
+#homeView .homeMainTable td:nth-child(1) .badge,
+#homeView .homeMainTable th:nth-child(1){
+  font-size:11px!important;
+  line-height:1.05!important;
+}
+#homeView .homeMainTable td:nth-child(1) .badge{
+  padding:3px 6px!important;
+}
+#supabaseStatusText.supabaseStatus{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin-top:0!important;
+  padding:3px 8px!important;
+  border-radius:999px!important;
+  background:#e9fff2!important;
+  border:1px solid #84c99d!important;
+  color:#146b38!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+}
+#supabaseSyncText.supabaseStatus{
+  min-width:0!important;
+  max-width:100%!important;
+  margin-top:0!important;
+  padding:3px 7px!important;
+  border-radius:999px!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.supabaseTopPanel{
+  grid-template-columns:90px minmax(220px,1.1fr) minmax(220px,1.1fr) auto auto minmax(160px,1fr)!important;
+}
+
 </style>
 </head>
 <body>
@@ -5836,7 +5880,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
 
                   <div class="smsGridLabel">簡訊電話</div>
                   <div class="smsGridInput">
-                    <input id="smsPhonesInput" class="smsPhonesInput" placeholder="買方電話、銷售業務手機、固定0986108958" />
+                    <input id="smsPhonesInput" class="smsPhonesInput" placeholder="買方電話、銷售業務手機、固定0965108958" />
                   </div>
                   <div class="smsGridActions">
                     <button type="button" class="addMini smsCopyStrongBtn smsPhonePriorityBtn" id="copySmsPhonesBtn">📋 複製電話</button>
@@ -6079,17 +6123,17 @@ body.settingsOnlyMode .topActions .topSettingBtn{
   const DEFAULT_SMS_TEMPLATE = "{買方}{稱謂}您好:茲收到{地址}，於{日期}給付之議價金共計{方式}{金額}{票號}，台慶文化崇明店06-3356699";
   const COWORKER_CONTACTS_KEY = "M_FOLDER_COWORKER_CONTACTS_V1";
   const COWORKER_CONTACTS_BACKUP_KEY = "M_FOLDER_COWORKER_CONTACTS_BACKUP_V114";
-  const FIXED_SMS_PHONE = "0986108958";
+  const FIXED_SMS_PHONE = "0965108958";
   const OP_CONFIG = [
     {field:"businessUpload", item:"業務行動智能", choices:["業務上傳","因故沒上傳"], note:"businessUploadNote", placeholder:"備註"},
-    {field:"iSmartScreenshot", item:"I智慧截圖", choices:["麗卉","無"], iSmart:true},
+    {field:"iSmartScreenshot", item:"I智慧截圖", staff:true, extra:["無"], iSmart:true},
     {field:"offerReceiptAssistant", item:"收斡旋金$單據", staff:true, extra:["無"], note:"offerReceiptNo", placeholder:"單據號碼", dateNote:"offerReceiptDate", datePlaceholder:"日期 例：7/1"},
     {field:"contractReceiptAssistant", item:"收合約單據", staff:true, note:"contractReceiptNo", placeholder:"單據號碼", dateNote:"contractReceiptDate", datePlaceholder:"日期 例：7/1", extraButtons:[{text:"同上", action:"copyOfferReceiptToContract"}]},
     {field:"photocopyLeftMid", item:"影印左＋中", staff:true},
     {field:"contractHouseMgmt", item:"契管房管", staff:true, extra:["因故先不動作"], note:"contractHouseMgmtNote", placeholder:"備註"},
     {field:"contractPaper", item:"契管紙本", staff:true, note:"contractPaperNote", placeholder:"備註"},
     {field:"scanCombined", item:"掃描3張A4 / 個資", staff:true},
-    {field:"supervisorReportAssistant", item:"收斡紙條LINE-回報主管文字", choices:["麗卉","花花","紹薇"], openReport:true, extraButtons:[{text:"文字查看", action:"reportSupervisor"}]},
+    {field:"supervisorReportAssistant", item:"收斡紙條LINE-回報主管文字", staff:true, extra:["無"], note:"supervisorReportNote", placeholder:"備註", openReport:true, extraButtons:[{text:"文字查看", action:"reportSupervisor"}]},
     {field:"lineOfferDestination", item:"LINE群組斡旋去向", staff:true, extra:["無"], note:"lineOfferDestinationNote", placeholder:"備註"},
     {field:"offerSlipPrint", item:"收斡紙條列印", staff:true, extra:["無"], extraButtons:[{text:"列印紙條", action:"printOfferSlip"}]},
     {field:"yellowSheet", item:"收斡黃單", staff:true, extra:["配件","沒進案","無"], note:"yellowSheetNote", placeholder:"備註"}
@@ -6257,19 +6301,25 @@ body.settingsOnlyMode .topActions .topSettingBtn{
   function buildSmsPhoneList(){
     const phones = [];
     salesPhonesFromContacts().forEach(p => phones.push(p));
-    return [...new Set(phones.filter(Boolean))].join(",");
+    phones.push(FIXED_SMS_PHONE);
+    return [...new Set(phones.map(p => String(p || "").replace(/\D/g, "")).filter(p => /^09\d{8}$/.test(p)))].join(",");
   }
   function currentSmsPhoneList(){
-    return ($("smsPhonesInput")?.value || buildSmsPhoneList()).trim();
+    const manual = ($("smsPhonesInput")?.value || "").trim();
+    const phones = String(manual || buildSmsPhoneList()).split(/[，,\s]+/).filter(Boolean);
+    phones.push(FIXED_SMS_PHONE);
+    return [...new Set(phones.map(p => String(p || "").replace(/\D/g, "")).filter(p => /^09\d{8}$/.test(p)))].join(",");
   }
   function updateSmsPhonePreview(){
     const el = $("smsPhonesInput");
     if(!el) return;
+    updatingSmsPhones = true;
     if(!smsPhonesManual){
-      updatingSmsPhones = true;
       el.value = buildSmsPhoneList();
-      updatingSmsPhones = false;
+    }else{
+      el.value = currentSmsPhoneList();
     }
+    updatingSmsPhones = false;
   }
   function normalizeFlowRecipientName(name){
     const s = String(name || "").trim();
@@ -6584,7 +6634,11 @@ body.settingsOnlyMode .topActions .topSettingBtn{
     const table = $("opTable");
     table.querySelectorAll(".opCell").forEach(n => n.remove());
     OP_CONFIG.forEach((cfg, idx) => {
-      const choices = cfg.staff ? [...activeStaffNames(), ...(cfg.extra || [])] : cfg.choices;
+      let choices = cfg.staff ? [...activeStaffNames(), ...(cfg.extra || [])] : [...(cfg.choices || [])];
+      // V168：人員設定為主；離職人員不出現在新案件，但既有案件已選的人不可被移除。
+      const selectedValue = String(opValues[cfg.field] || "").trim();
+      if(selectedValue && !choices.includes(selectedValue)) choices = [selectedValue, ...choices];
+      choices = [...new Set(choices.filter(v => String(v || "").trim()))];
       let controls = choices.map(v => `<button type="button" class="choiceBtn" data-op="${escapeHtml(cfg.field)}" data-value="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join("");
       if(cfg.extraButton){
         controls += `<button type="button" class="choiceBtn printSetupBtn" data-extra-action="${escapeHtml(cfg.extraButton.action)}">${escapeHtml(cfg.extraButton.text)}</button>`;
@@ -6676,6 +6730,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
         if(val === "因故沒上傳" || val === "因故先不動作"){ label = "因故"; type = "warn"; }
         if(field === "iSmartScreenshot" && val === "無"){ label = "不用選"; type = "gray"; }
         if(field === "offerReceiptAssistant" && val === "無"){ label = "無單據"; type = "gray"; }
+        if(field === "supervisorReportAssistant" && val === "無"){ label = "無"; type = "gray"; }
         status.innerHTML = badge(label,type);
       }
     }
@@ -7231,7 +7286,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
       changeRows:collectChanges(),
       smsDisplay:$("smsDisplay").value.trim(),
       smsManual,
-      smsPhones: $("smsPhonesInput")?.value?.trim() || "",
+      smsPhones: currentSmsPhoneList(),
       smsPhonesManual,
       opTimes:{...opTimes},
       iSmartText: $("iSmartText").value.trim(),
@@ -7299,6 +7354,10 @@ body.settingsOnlyMode .topActions .topSettingBtn{
     opValues.moneyMethod = r.moneyMethod || "現金";
     OP_CONFIG.forEach(cfg => {
       opValues[cfg.field] = r[cfg.field] || "";
+    });
+    // V168：載入既有案件後重建經手人按鈕，保留已選但後來離職的人員。
+    buildOpTable();
+    OP_CONFIG.forEach(cfg => {
       if(cfg.note && $(cfg.note)) $(cfg.note).value = r[cfg.note] || "";
       if(cfg.dateNote && $(cfg.dateNote)) $(cfg.dateNote).value = r[cfg.dateNote] || "";
     });
@@ -7318,6 +7377,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
       updatingSmsPhones = false;
     }
     if(!smsPhonesManual || !r.smsPhones) smsPhonesManual = false;
+    updateSmsPhonePreview();
 
     $("archiveFromFormBtn").classList.toggle("hidden", !r.id || r.archived);
     $("topArchiveFromFormBtn")?.classList.toggle("hidden", !r.id || r.archived);
@@ -11207,7 +11267,13 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     const phones = [];
     v129FindPhones($("buyerPhone")?.value || "").forEach(p => phones.push(p));
     v129AgentPhonesFromContacts($("salesAgent")?.value || "").forEach(p => phones.push(p));
-    return [...new Set(phones.filter(Boolean))].join(",");
+    // V170：簡訊電話固定電話永遠放最後一個。
+    const fixed = "0965108958";
+    const cleaned = phones
+      .map(p => String(p || "").replace(/\D/g, ""))
+      .filter(p => /^09\d{8}$/.test(p) && p !== fixed);
+    cleaned.push(fixed);
+    return [...new Set(cleaned)].join(",");
   };
 
   function ensureAgentError(id, text){
@@ -12621,7 +12687,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   function supabaseCollectState(){
     return {
       app:"m_folder",
-      schemaVersion:164,
+      schemaVersion:167,
       savedAt:new Date().toISOString(),
       records: Array.isArray(records) ? records : [],
       staff: Array.isArray(staff) ? staff : [],
@@ -12695,23 +12761,30 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     const s = supabaseCurrentSettings();
     if(!s.url || !s.anonKey) throw new Error("缺少 Supabase URL 或 KEY");
     const state = supabaseCollectState();
-    const url = `${s.url}/rest/v1/${SUPABASE_FIXED_TABLE}?on_conflict=id`;
-    const body = {
-      id: SUPABASE_FIXED_ROW_ID,
-      data: state,
-      updated_at: new Date().toISOString()
-    };
-    const res = await fetch(url, {
-      method:"POST",
-      headers:supabaseHeaders({"Prefer":"resolution=merge-duplicates,return=representation"}),
-      body: JSON.stringify(body)
+    const nowIso = new Date().toISOString();
+
+    // V167：上傳只要「最小回傳」。舊版 return=representation 會要求 Supabase 回傳整包 jsonb，資料變大時容易 500 timeout。
+    const patchUrl = `${s.url}/rest/v1/${SUPABASE_FIXED_TABLE}?id=eq.${encodeURIComponent(SUPABASE_FIXED_ROW_ID)}`;
+    const patchBody = {data: state, updated_at: nowIso};
+    let res = await fetch(patchUrl, {
+      method:"PATCH",
+      headers:supabaseHeaders({"Prefer":"return=minimal"}),
+      body: JSON.stringify(patchBody)
     });
-    if(!res.ok) throw new Error(`上傳失敗 ${res.status}：${await res.text()}`);
-    const rows = await res.json().catch(() => []);
-    if(Array.isArray(rows) && rows[0] && rows[0].updated_at){
-      supabaseLastCloudUpdatedAt = rows[0].updated_at;
+
+    // 如果資料列不存在，再用 upsert 建立；也一樣使用 return=minimal，避免回傳整包資料造成 timeout。
+    if(res.status === 404 || res.status === 406){
+      const insertUrl = `${s.url}/rest/v1/${SUPABASE_FIXED_TABLE}?on_conflict=id`;
+      res = await fetch(insertUrl, {
+        method:"POST",
+        headers:supabaseHeaders({"Prefer":"resolution=merge-duplicates,return=minimal"}),
+        body: JSON.stringify({id: SUPABASE_FIXED_ROW_ID, data: state, updated_at: nowIso})
+      });
     }
-    return rows;
+
+    if(!res.ok) throw new Error(`上傳失敗 ${res.status}：${await res.text()}`);
+    supabaseLastCloudUpdatedAt = nowIso;
+    return [{updated_at: nowIso}];
   }
   function supabaseRowIsNewer(row){
     if(!row || !row.updated_at) return false;
@@ -12731,7 +12804,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
         supabaseLastCloudUpdatedAt = row.updated_at || supabaseLastCloudUpdatedAt;
         if(row.data && !supabaseIsEmptyData(row.data)){
           supabaseApplyState(row.data);
-          supabaseSetStatus("已連線", `已自動讀取雲端更新（${records.length}筆｜${nowTextAD()}）`);
+          supabaseSetStatus("已連線", `雲端已更新（${records.length}筆｜${nowTextAD()}）`);
         }
       }else if(row.updated_at && !supabaseLastCloudUpdatedAt){
         supabaseLastCloudUpdatedAt = row.updated_at;
@@ -13004,9 +13077,9 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
 
 
 
-/* V152：簡訊電話固定加入 0986108958，手動輸入也會在複製時保留 */
+/* V168：簡訊電話固定加入 0965108958，手動輸入也會在複製時保留 */
 (function(){
-  const FIXED_SMS_PHONE_V152 = "0986108958";
+  const FIXED_SMS_PHONE_V152 = "0965108958";
   const uniquePhonesV152 = (arr) => [...new Set((arr || [])
     .map(v => String(v || "").replace(/\D/g,""))
     .filter(v => /^09\d{8}$/.test(v)))];
@@ -13029,16 +13102,13 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   updateSmsPhonePreview = function(){
     const el = $("smsPhonesInput");
     if(!el) return;
+    updatingSmsPhones = true;
     if(!smsPhonesManual){
-      updatingSmsPhones = true;
       el.value = buildSmsPhoneList();
-      updatingSmsPhones = false;
-    }else if(el.value.trim()){
-      const fixedList = currentSmsPhoneList();
-      if(fixedList && !fixedList.split(/[，,\s]+/).includes(FIXED_SMS_PHONE_V152)){
-        el.value = fixedList;
-      }
+    }else{
+      el.value = currentSmsPhoneList();
     }
+    updatingSmsPhones = false;
   };
   const smsPhoneElV152 = $("smsPhonesInput");
   if(smsPhoneElV152){
