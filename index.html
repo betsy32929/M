@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>M夾紀錄 V165｜Supabase自動連線・I智慧按鈕修正版</title>
+<title>M夾紀錄 V166｜跨瀏覽器自動讀寫同步版</title>
 <style>
 :root{
   --page1:#eef7ff; --page2:#fff4f9; --ink:#243042; --muted:#68778d;
@@ -12557,12 +12557,13 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   }
 
 
-  /* V165：Supabase 自動連線 + I智慧按鈕修正版
+  /* V166：Supabase 跨瀏覽器自動讀寫同步版
      - 資料表固定 public.m_folder_state
      - 資料列固定 id = main
      - 有 URL / KEY 時，每次開啟會自動連線並先讀雲端，不需要每次手動點「連線」
      - 開啟網頁只先讀雲端，不主動把本機舊資料覆蓋雲端
      - 修改/新增/刪除後才自動 upsert 到雲端
+     - 每 2 秒自動檢查雲端 updated_at；Edge/Chrome 其中一邊改資料，另一邊會自動讀取
      - 按「中斷」才停止自動連線 */
   const SUPABASE_FIXED_TABLE = "m_folder_state";
   const SUPABASE_FIXED_ROW_ID = "main";
@@ -12574,6 +12575,9 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   let supabasePushTimer = null;
   let supabaseIsPushing = false;
   let supabaseReadyForPush = false;
+  let supabaseLastCloudUpdatedAt = "";
+  let supabasePullTimer = null;
+  let supabasePullInFlight = false;
 
   function supabaseNormalizeUrl(url){
     let u = String(url || "").trim();
@@ -12703,8 +12707,52 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
       body: JSON.stringify(body)
     });
     if(!res.ok) throw new Error(`上傳失敗 ${res.status}：${await res.text()}`);
-    return await res.json().catch(() => []);
+    const rows = await res.json().catch(() => []);
+    if(Array.isArray(rows) && rows[0] && rows[0].updated_at){
+      supabaseLastCloudUpdatedAt = rows[0].updated_at;
+    }
+    return rows;
   }
+  function supabaseRowIsNewer(row){
+    if(!row || !row.updated_at) return false;
+    if(!supabaseLastCloudUpdatedAt) return true;
+    const a = Date.parse(row.updated_at || "");
+    const b = Date.parse(supabaseLastCloudUpdatedAt || "");
+    if(Number.isNaN(a) || Number.isNaN(b)) return row.updated_at !== supabaseLastCloudUpdatedAt;
+    return a > b + 250;
+  }
+  async function supabasePullLatestIfChanged(){
+    if(!supabaseHasConnection() || !supabaseReadyForPush || supabaseIsApplyingCloud || supabaseIsPushing || supabasePullInFlight) return;
+    supabasePullInFlight = true;
+    try{
+      const row = await supabaseGetRow();
+      if(!row) return;
+      if(supabaseRowIsNewer(row)){
+        supabaseLastCloudUpdatedAt = row.updated_at || supabaseLastCloudUpdatedAt;
+        if(row.data && !supabaseIsEmptyData(row.data)){
+          supabaseApplyState(row.data);
+          supabaseSetStatus("已連線", `已自動讀取雲端更新（${records.length}筆｜${nowTextAD()}）`);
+        }
+      }else if(row.updated_at && !supabaseLastCloudUpdatedAt){
+        supabaseLastCloudUpdatedAt = row.updated_at;
+      }
+    }catch(e){
+      console.error("Supabase auto pull error", e);
+      supabaseSetStatus("讀取雲端失敗", e.message || "自動檢查雲端失敗");
+    }finally{
+      supabasePullInFlight = false;
+    }
+  }
+  function supabaseStartAutoPull(){
+    clearInterval(supabasePullTimer);
+    if(!supabaseHasConnection()) return;
+    supabasePullTimer = setInterval(supabasePullLatestIfChanged, 2000);
+  }
+  function supabaseStopAutoPull(){
+    clearInterval(supabasePullTimer);
+    supabasePullTimer = null;
+  }
+
   async function supabasePullOnStartup(){
     supabaseReadyForPush = false;
     if(!supabaseHasConnection()){
@@ -12715,6 +12763,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     supabaseSetStatus("已連線", "正在讀取雲端資料…");
     try{
       const row = await supabaseGetRow();
+      if(row && row.updated_at) supabaseLastCloudUpdatedAt = row.updated_at;
       if(row && !supabaseIsEmptyData(row.data)){
         supabaseApplyState(row.data);
         supabaseSetStatus("已連線", `已套用雲端資料（${records.length}筆），之後修改會自動同步。`);
@@ -12728,6 +12777,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
       supabaseSetStatus("連線失敗", e.message || "無法讀取 Supabase");
     }finally{
       supabaseReadyForPush = true;
+      supabaseStartAutoPull();
     }
   }
   async function supabaseConnectAndRead(){
@@ -12738,6 +12788,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     supabaseSetStatus("已連線", "正在檢查雲端資料…");
     try{
       const row = await supabaseGetRow();
+      if(row && row.updated_at) supabaseLastCloudUpdatedAt = row.updated_at;
       if(row && !supabaseIsEmptyData(row.data)){
         supabaseApplyState(row.data);
         supabaseSetStatus("已連線", `已讀取雲端資料（${records.length}筆）`);
@@ -12754,6 +12805,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
       alert("Supabase 連線失敗：\n" + (e.message || e));
     }finally{
       supabaseReadyForPush = true;
+      supabaseStartAutoPull();
     }
   }
   async function supabaseManualSync(){
@@ -12764,6 +12816,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     supabaseSetStatus("已連線", "正在上傳本機資料到雲端…");
     try{
       await supabaseUpsertState("手動立即同步");
+      supabaseStartAutoPull();
       supabaseSetStatus("已連線", `已同步到雲端（${records.length}筆｜${nowTextAD()}）`);
     }catch(e){
       console.error(e);
@@ -12777,7 +12830,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     supabasePushTimer = setTimeout(async () => {
       if(supabaseIsPushing) return;
       supabaseIsPushing = true;
-      supabaseSetStatus("已連線", "正在自動同步雲端…");
+      supabaseSetStatus("已連線", "正在上傳雲端…");
       try{
         await supabaseUpsertState("資料變更自動同步");
         supabaseSetStatus("已連線", `${syncText}（${nowTextAD()}）`);
@@ -12793,13 +12846,13 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   const _v164SaveRecords = saveRecords;
   saveRecords = function(){
     _v164SaveRecords.apply(this, arguments);
-    queueSupabasePush("案件資料已自動同步雲端");
+    queueSupabasePush("案件資料已上傳雲端");
   };
   const _v164SaveSettingsFromUI = saveSettingsFromUI;
   saveSettingsFromUI = function(){
     _v164SaveSettingsFromUI.apply(this, arguments);
     supabasePersistSettings();
-    queueSupabasePush("設定與案件資料已自動同步雲端");
+    queueSupabasePush("設定與案件資料已上傳雲端");
   };
 
   function installV164SupabaseSync(){
@@ -12817,6 +12870,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
           localStorage.setItem(SUPABASE_CONNECTED_KEY, "1");
           supabaseSetStatus("已連線", "URL / KEY 已儲存，重新整理或按「連線」會讀取雲端。修改資料會自動同步。");
           supabaseReadyForPush = true;
+          supabaseStartAutoPull();
         });
       }
     });
@@ -12848,12 +12902,14 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
         localStorage.setItem(SUPABASE_DISABLED_KEY, "1");
         localStorage.removeItem(SUPABASE_CONNECTED_KEY);
         supabaseReadyForPush = false;
+        supabaseStopAutoPull();
         supabaseSetStatus("已中斷", "已停止同步；按「連線」才會重新啟用。");
       }, true);
     }
     if(supabaseHasConnection()){
       localStorage.setItem(SUPABASE_CONNECTED_KEY, "1");
       supabaseSetStatus("已連線", "已啟用自動連線，正在準備讀取雲端資料…");
+      supabaseStartAutoPull();
     }else{
       supabaseSetStatus("已中斷", "貼上 URL / KEY 後會自動連線，或按「連線」。");
     }
