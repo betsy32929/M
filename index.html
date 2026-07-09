@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>M夾紀錄 V163｜紙條7.5公分・直接列印・左邊界0.5公分版</title>
+<title>M夾紀錄 V164｜Supabase真正同步版</title>
 <style>
 :root{
   --page1:#eef7ff; --page2:#fff4f9; --ink:#243042; --muted:#68778d;
@@ -6049,7 +6049,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
 </div>
 
 <div class="footerNote">
-  <span><strong>單機版</strong>｜最後存檔：<span id="lastSaveText">尚未操作</span></span>
+  <span><strong>雲端同步版</strong>｜最後存檔：<span id="lastSaveText">尚未操作</span></span>
   <span>操作點選後請記得按「存檔」｜操作新增無按鈕版</span>
 </div>
 
@@ -12556,6 +12556,277 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     });
   }
 
+
+  /* V164：Supabase 真正同步版
+     - 資料表固定 public.m_folder_state
+     - 資料列固定 id = main
+     - 開啟網頁只先讀雲端，不主動把本機舊資料覆蓋雲端
+     - 按「連線」或「立即同步」才會把本機資料上傳
+     - 有新增/修改/刪除後自動 upsert 到雲端 */
+  const SUPABASE_FIXED_TABLE = "m_folder_state";
+  const SUPABASE_FIXED_ROW_ID = "main";
+  const SUPABASE_DEFAULT_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
+  const SUPABASE_DEFAULT_ANON_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
+  let supabaseIsApplyingCloud = false;
+  let supabasePushTimer = null;
+  let supabaseIsPushing = false;
+
+  function supabaseNormalizeUrl(url){
+    let u = String(url || "").trim();
+    u = u.replace(/\/rest\/v1\/?$/i, "");
+    u = u.replace(/\/+$/g, "");
+    return u;
+  }
+  function supabaseSetStatus(status, syncText){
+    if($("supabaseStatusText")) $("supabaseStatusText").textContent = status;
+    if($("supabaseSyncText")) $("supabaseSyncText").textContent = syncText;
+  }
+  function supabasePersistSettings(){
+    const url = supabaseNormalizeUrl($("supabaseUrl")?.value || SUPABASE_DEFAULT_URL);
+    const anonKey = ($("supabaseAnonKey")?.value || SUPABASE_DEFAULT_ANON_KEY).trim();
+    if($("supabaseUrl")) $("supabaseUrl").value = url;
+    if($("supabaseAnonKey")) $("supabaseAnonKey").value = anonKey;
+    const supa = {url, anonKey, table:SUPABASE_FIXED_TABLE, userKey:SUPABASE_FIXED_ROW_ID};
+    try{ localStorage.setItem("M_FOLDER_SUPABASE_SETTINGS_MASTER", JSON.stringify(supa)); }catch(e){}
+    return supa;
+  }
+  function supabaseCurrentSettings(){
+    let saved = {};
+    try{ saved = JSON.parse(localStorage.getItem("M_FOLDER_SUPABASE_SETTINGS_MASTER") || "{}"); }catch(e){ saved = {}; }
+    const url = supabaseNormalizeUrl($("supabaseUrl")?.value || saved.url || SUPABASE_DEFAULT_URL);
+    const anonKey = String($("supabaseAnonKey")?.value || saved.anonKey || SUPABASE_DEFAULT_ANON_KEY || "").trim();
+    return {url, anonKey, table:SUPABASE_FIXED_TABLE, rowId:SUPABASE_FIXED_ROW_ID};
+  }
+  function supabaseHasConnection(){
+    const s = supabaseCurrentSettings();
+    return !!(s.url && s.anonKey && localStorage.getItem("M_FOLDER_SUPABASE_CONNECTED_MASTER") === "1");
+  }
+  function supabaseHeaders(extra={}){
+    const s = supabaseCurrentSettings();
+    return {
+      "apikey": s.anonKey,
+      "Authorization": "Bearer " + s.anonKey,
+      "Content-Type": "application/json",
+      ...extra
+    };
+  }
+  function supabaseCollectState(){
+    return {
+      app:"m_folder",
+      schemaVersion:164,
+      savedAt:new Date().toISOString(),
+      records: Array.isArray(records) ? records : [],
+      staff: Array.isArray(staff) ? staff : [],
+      smsTemplate: $("smsTemplate")?.value || localStorage.getItem(SMS_TEMPLATE_KEY) || DEFAULT_SMS_TEMPLATE,
+      flowRecipients: Array.isArray(flowRecipients) ? flowRecipients : [],
+      coworkerContactsRaw: coworkerContactsRaw || localStorage.getItem(COWORKER_CONTACTS_KEY) || ""
+    };
+  }
+  function supabaseIsEmptyData(data){
+    if(!data) return true;
+    if(Array.isArray(data)) return data.length === 0;
+    if(Array.isArray(data.records) && data.records.length > 0) return false;
+    const keys = Object.keys(data || {}).filter(k => !["app","schemaVersion","savedAt"].includes(k));
+    return keys.length === 0 || (Array.isArray(data.records) && data.records.length === 0 && keys.length <= 1);
+  }
+  function supabaseApplyState(data){
+    if(!data) return;
+    let nextRecords = [];
+    if(Array.isArray(data)){
+      nextRecords = data;
+    }else if(Array.isArray(data.records)){
+      nextRecords = data.records;
+    }
+    supabaseIsApplyingCloud = true;
+    try{
+      records = nextRecords.map(normalizeRecord);
+      localStorage.setItem(SAVE_KEY, JSON.stringify(records));
+      if(records.length > 0) localStorage.removeItem(EMPTY_LOCK_KEY);
+      if(data && !Array.isArray(data)){
+        if(Array.isArray(data.staff)){
+          staff = data.staff;
+          localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+        }
+        if(typeof data.smsTemplate === "string"){
+          localStorage.setItem(SMS_TEMPLATE_KEY, data.smsTemplate || DEFAULT_SMS_TEMPLATE);
+          if($("smsTemplate")) $("smsTemplate").value = data.smsTemplate || DEFAULT_SMS_TEMPLATE;
+        }
+        if(Array.isArray(data.flowRecipients)){
+          flowRecipients = data.flowRecipients;
+          localStorage.setItem(FLOW_RECIPIENTS_KEY, JSON.stringify(flowRecipients));
+          if($("flowRecipientsInput")) $("flowRecipientsInput").value = flowRecipients.join(",");
+        }
+        if(typeof data.coworkerContactsRaw === "string"){
+          coworkerContactsRaw = data.coworkerContactsRaw;
+          localStorage.setItem(COWORKER_CONTACTS_KEY, coworkerContactsRaw);
+          localStorage.setItem(COWORKER_CONTACTS_BACKUP_KEY, coworkerContactsRaw);
+          if($("coworkerContactsInput")) $("coworkerContactsInput").value = coworkerContactsRaw;
+        }
+      }
+      renderStaffRows();
+      buildOpTable();
+      refreshAllOps();
+      renderHome();
+      if($("lastSaveText")) $("lastSaveText").textContent = `已讀取雲端（${records.length}筆）`;
+    }catch(e){
+      console.error("Supabase apply error", e);
+    }finally{
+      supabaseIsApplyingCloud = false;
+    }
+  }
+  async function supabaseGetRow(){
+    const s = supabaseCurrentSettings();
+    if(!s.url || !s.anonKey) throw new Error("缺少 Supabase URL 或 KEY");
+    const url = `${s.url}/rest/v1/${SUPABASE_FIXED_TABLE}?id=eq.${encodeURIComponent(SUPABASE_FIXED_ROW_ID)}&select=id,data,updated_at`;
+    const res = await fetch(url, {method:"GET", headers:supabaseHeaders()});
+    if(!res.ok) throw new Error(`讀取失敗 ${res.status}：${await res.text()}`);
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length ? rows[0] : null;
+  }
+  async function supabaseUpsertState(reason="手動同步"){
+    const s = supabaseCurrentSettings();
+    if(!s.url || !s.anonKey) throw new Error("缺少 Supabase URL 或 KEY");
+    const state = supabaseCollectState();
+    const url = `${s.url}/rest/v1/${SUPABASE_FIXED_TABLE}?on_conflict=id`;
+    const body = {
+      id: SUPABASE_FIXED_ROW_ID,
+      data: state,
+      updated_at: new Date().toISOString()
+    };
+    const res = await fetch(url, {
+      method:"POST",
+      headers:supabaseHeaders({"Prefer":"resolution=merge-duplicates,return=representation"}),
+      body: JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error(`上傳失敗 ${res.status}：${await res.text()}`);
+    return await res.json().catch(() => []);
+  }
+  async function supabasePullOnStartup(){
+    if(!supabaseHasConnection()) return;
+    supabaseSetStatus("已連線", "正在讀取雲端資料…");
+    try{
+      const row = await supabaseGetRow();
+      if(row && !supabaseIsEmptyData(row.data)){
+        supabaseApplyState(row.data);
+        supabaseSetStatus("已連線", `已套用雲端資料（${records.length}筆）`);
+      }else if(records.length > 0){
+        supabaseSetStatus("已連線", "雲端目前空白；本機有資料，請按「立即同步」上傳。");
+      }else{
+        supabaseSetStatus("已連線", "雲端與本機目前都沒有案件資料。");
+      }
+    }catch(e){
+      console.error(e);
+      supabaseSetStatus("連線失敗", e.message || "無法讀取 Supabase");
+    }
+  }
+  async function supabaseConnectAndRead(){
+    supabasePersistSettings();
+    localStorage.setItem("M_FOLDER_SUPABASE_CONNECTED_MASTER","1");
+    supabaseSetStatus("已連線", "正在檢查雲端資料…");
+    try{
+      const row = await supabaseGetRow();
+      if(row && !supabaseIsEmptyData(row.data)){
+        supabaseApplyState(row.data);
+        supabaseSetStatus("已連線", `已讀取雲端資料（${records.length}筆）`);
+      }else if(records.length > 0){
+        await supabaseUpsertState("第一次連線上傳本機資料");
+        supabaseSetStatus("已連線", `雲端原本空白，已上傳本機資料（${records.length}筆）`);
+      }else{
+        await supabaseUpsertState("建立空白雲端資料");
+        supabaseSetStatus("已連線", "已建立空白雲端資料列。");
+      }
+    }catch(e){
+      console.error(e);
+      supabaseSetStatus("連線失敗", e.message || "Supabase 連線失敗");
+      alert("Supabase 連線失敗：\n" + (e.message || e));
+    }
+  }
+  async function supabaseManualSync(){
+    supabasePersistSettings();
+    localStorage.setItem("M_FOLDER_SUPABASE_CONNECTED_MASTER","1");
+    supabaseSetStatus("已連線", "正在上傳本機資料到雲端…");
+    try{
+      await supabaseUpsertState("手動立即同步");
+      supabaseSetStatus("已連線", `已同步到雲端（${records.length}筆｜${nowTextAD()}）`);
+    }catch(e){
+      console.error(e);
+      supabaseSetStatus("同步失敗", e.message || "Supabase 同步失敗");
+      alert("Supabase 同步失敗：\n" + (e.message || e));
+    }
+  }
+  function queueSupabasePush(syncText="已自動同步雲端"){
+    if(supabaseIsApplyingCloud || !supabaseHasConnection()) return;
+    clearTimeout(supabasePushTimer);
+    supabasePushTimer = setTimeout(async () => {
+      if(supabaseIsPushing) return;
+      supabaseIsPushing = true;
+      supabaseSetStatus("已連線", "正在自動同步雲端…");
+      try{
+        await supabaseUpsertState("資料變更自動同步");
+        supabaseSetStatus("已連線", `${syncText}（${nowTextAD()}）`);
+      }catch(e){
+        console.error(e);
+        supabaseSetStatus("自動同步失敗", e.message || "請檢查 URL / KEY / RLS");
+      }finally{
+        supabaseIsPushing = false;
+      }
+    }, 650);
+  }
+
+  const _v164SaveRecords = saveRecords;
+  saveRecords = function(){
+    _v164SaveRecords.apply(this, arguments);
+    queueSupabasePush("案件資料已自動同步雲端");
+  };
+  const _v164SaveSettingsFromUI = saveSettingsFromUI;
+  saveSettingsFromUI = function(){
+    _v164SaveSettingsFromUI.apply(this, arguments);
+    supabasePersistSettings();
+    queueSupabasePush("設定與案件資料已自動同步雲端");
+  };
+
+  function installV164SupabaseSync(){
+    const saved = supabaseCurrentSettings();
+    if($("supabaseUrl")) $("supabaseUrl").value = saved.url || SUPABASE_DEFAULT_URL;
+    if($("supabaseAnonKey")) $("supabaseAnonKey").value = saved.anonKey || SUPABASE_DEFAULT_ANON_KEY;
+    supabasePersistSettings();
+
+    const connectBtn = $("connectSupabaseBtn");
+    if(connectBtn && connectBtn.dataset.v164Bound !== "1"){
+      connectBtn.dataset.v164Bound = "1";
+      connectBtn.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        supabaseConnectAndRead();
+      }, true);
+    }
+    const syncBtn = $("syncSupabaseBtn");
+    if(syncBtn && syncBtn.dataset.v164Bound !== "1"){
+      syncBtn.dataset.v164Bound = "1";
+      syncBtn.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        supabaseManualSync();
+      }, true);
+    }
+    const disBtn = $("disconnectSupabaseBtn");
+    if(disBtn && disBtn.dataset.v164Bound !== "1"){
+      disBtn.dataset.v164Bound = "1";
+      disBtn.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        localStorage.removeItem("M_FOLDER_SUPABASE_CONNECTED_MASTER");
+        supabaseSetStatus("已中斷", "已停止同步");
+      }, true);
+    }
+    if(localStorage.getItem("M_FOLDER_SUPABASE_CONNECTED_MASTER") === "1"){
+      supabaseSetStatus("已連線", "等待讀取雲端資料…");
+    }else{
+      supabaseSetStatus("已中斷", "貼上 URL / KEY 後按「連線」。");
+    }
+  }
+
+
   /* V141：稱謂預設請選擇；歸檔列表末定金流不顯示拆帳表/冒泡本完成 */
   loadStaff();
   loadFlowRecipients();
@@ -12575,6 +12846,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   renderStaffRows();
   buildOpTable();
   bind();
+  installV164SupabaseSync();
   installV135PendingBindings();
   installV138Enhancements();
   bindBuyerIdNoValidation();
@@ -12601,6 +12873,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   installV145OfferOnly();
   setForm({});
   renderHome();
+  supabasePullOnStartup();
   installV139InputModeHints();
 })();
 
