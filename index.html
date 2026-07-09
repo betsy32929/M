@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>M夾紀錄 V164｜Supabase真正同步版</title>
+<title>M夾紀錄 V165｜Supabase自動連線・I智慧按鈕修正版</title>
 <style>
 :root{
   --page1:#eef7ff; --page2:#fff4f9; --ink:#243042; --muted:#68778d;
@@ -12557,19 +12557,23 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   }
 
 
-  /* V164：Supabase 真正同步版
+  /* V165：Supabase 自動連線 + I智慧按鈕修正版
      - 資料表固定 public.m_folder_state
      - 資料列固定 id = main
+     - 有 URL / KEY 時，每次開啟會自動連線並先讀雲端，不需要每次手動點「連線」
      - 開啟網頁只先讀雲端，不主動把本機舊資料覆蓋雲端
-     - 按「連線」或「立即同步」才會把本機資料上傳
-     - 有新增/修改/刪除後自動 upsert 到雲端 */
+     - 修改/新增/刪除後才自動 upsert 到雲端
+     - 按「中斷」才停止自動連線 */
   const SUPABASE_FIXED_TABLE = "m_folder_state";
   const SUPABASE_FIXED_ROW_ID = "main";
   const SUPABASE_DEFAULT_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   const SUPABASE_DEFAULT_ANON_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
+  const SUPABASE_DISABLED_KEY = "M_FOLDER_SUPABASE_DISABLED_MASTER";
+  const SUPABASE_CONNECTED_KEY = "M_FOLDER_SUPABASE_CONNECTED_MASTER";
   let supabaseIsApplyingCloud = false;
   let supabasePushTimer = null;
   let supabaseIsPushing = false;
+  let supabaseReadyForPush = false;
 
   function supabaseNormalizeUrl(url){
     let u = String(url || "").trim();
@@ -12599,7 +12603,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   }
   function supabaseHasConnection(){
     const s = supabaseCurrentSettings();
-    return !!(s.url && s.anonKey && localStorage.getItem("M_FOLDER_SUPABASE_CONNECTED_MASTER") === "1");
+    return !!(s.url && s.anonKey && localStorage.getItem(SUPABASE_DISABLED_KEY) !== "1");
   }
   function supabaseHeaders(extra={}){
     const s = supabaseCurrentSettings();
@@ -12702,26 +12706,35 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     return await res.json().catch(() => []);
   }
   async function supabasePullOnStartup(){
-    if(!supabaseHasConnection()) return;
+    supabaseReadyForPush = false;
+    if(!supabaseHasConnection()){
+      supabaseSetStatus("已中斷", "未啟用雲端同步；貼上 URL / KEY 後會自動連線，或按「連線」。");
+      return;
+    }
+    localStorage.setItem(SUPABASE_CONNECTED_KEY, "1");
     supabaseSetStatus("已連線", "正在讀取雲端資料…");
     try{
       const row = await supabaseGetRow();
       if(row && !supabaseIsEmptyData(row.data)){
         supabaseApplyState(row.data);
-        supabaseSetStatus("已連線", `已套用雲端資料（${records.length}筆）`);
+        supabaseSetStatus("已連線", `已套用雲端資料（${records.length}筆），之後修改會自動同步。`);
       }else if(records.length > 0){
-        supabaseSetStatus("已連線", "雲端目前空白；本機有資料，請按「立即同步」上傳。");
+        supabaseSetStatus("已連線", "雲端目前空白；修改資料或按「立即同步」會上傳本機資料。");
       }else{
-        supabaseSetStatus("已連線", "雲端與本機目前都沒有案件資料。");
+        supabaseSetStatus("已連線", "雲端與本機目前都沒有案件資料。之後新增會自動同步。");
       }
     }catch(e){
       console.error(e);
       supabaseSetStatus("連線失敗", e.message || "無法讀取 Supabase");
+    }finally{
+      supabaseReadyForPush = true;
     }
   }
   async function supabaseConnectAndRead(){
     supabasePersistSettings();
-    localStorage.setItem("M_FOLDER_SUPABASE_CONNECTED_MASTER","1");
+    localStorage.removeItem(SUPABASE_DISABLED_KEY);
+    localStorage.setItem(SUPABASE_CONNECTED_KEY,"1");
+    supabaseReadyForPush = false;
     supabaseSetStatus("已連線", "正在檢查雲端資料…");
     try{
       const row = await supabaseGetRow();
@@ -12739,11 +12752,15 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
       console.error(e);
       supabaseSetStatus("連線失敗", e.message || "Supabase 連線失敗");
       alert("Supabase 連線失敗：\n" + (e.message || e));
+    }finally{
+      supabaseReadyForPush = true;
     }
   }
   async function supabaseManualSync(){
     supabasePersistSettings();
-    localStorage.setItem("M_FOLDER_SUPABASE_CONNECTED_MASTER","1");
+    localStorage.removeItem(SUPABASE_DISABLED_KEY);
+    localStorage.setItem(SUPABASE_CONNECTED_KEY,"1");
+    supabaseReadyForPush = true;
     supabaseSetStatus("已連線", "正在上傳本機資料到雲端…");
     try{
       await supabaseUpsertState("手動立即同步");
@@ -12755,7 +12772,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     }
   }
   function queueSupabasePush(syncText="已自動同步雲端"){
-    if(supabaseIsApplyingCloud || !supabaseHasConnection()) return;
+    if(supabaseIsApplyingCloud || !supabaseReadyForPush || !supabaseHasConnection()) return;
     clearTimeout(supabasePushTimer);
     supabasePushTimer = setTimeout(async () => {
       if(supabaseIsPushing) return;
@@ -12790,6 +12807,19 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     if($("supabaseUrl")) $("supabaseUrl").value = saved.url || SUPABASE_DEFAULT_URL;
     if($("supabaseAnonKey")) $("supabaseAnonKey").value = saved.anonKey || SUPABASE_DEFAULT_ANON_KEY;
     supabasePersistSettings();
+    ["supabaseUrl","supabaseAnonKey"].forEach(id => {
+      const el = $(id);
+      if(el && el.dataset.v165InputBound !== "1"){
+        el.dataset.v165InputBound = "1";
+        el.addEventListener("change", () => {
+          supabasePersistSettings();
+          localStorage.removeItem(SUPABASE_DISABLED_KEY);
+          localStorage.setItem(SUPABASE_CONNECTED_KEY, "1");
+          supabaseSetStatus("已連線", "URL / KEY 已儲存，重新整理或按「連線」會讀取雲端。修改資料會自動同步。");
+          supabaseReadyForPush = true;
+        });
+      }
+    });
 
     const connectBtn = $("connectSupabaseBtn");
     if(connectBtn && connectBtn.dataset.v164Bound !== "1"){
@@ -12815,15 +12845,52 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
       disBtn.addEventListener("click", e => {
         e.preventDefault();
         e.stopImmediatePropagation();
-        localStorage.removeItem("M_FOLDER_SUPABASE_CONNECTED_MASTER");
-        supabaseSetStatus("已中斷", "已停止同步");
+        localStorage.setItem(SUPABASE_DISABLED_KEY, "1");
+        localStorage.removeItem(SUPABASE_CONNECTED_KEY);
+        supabaseReadyForPush = false;
+        supabaseSetStatus("已中斷", "已停止同步；按「連線」才會重新啟用。");
       }, true);
     }
-    if(localStorage.getItem("M_FOLDER_SUPABASE_CONNECTED_MASTER") === "1"){
-      supabaseSetStatus("已連線", "等待讀取雲端資料…");
+    if(supabaseHasConnection()){
+      localStorage.setItem(SUPABASE_CONNECTED_KEY, "1");
+      supabaseSetStatus("已連線", "已啟用自動連線，正在準備讀取雲端資料…");
     }else{
-      supabaseSetStatus("已中斷", "貼上 URL / KEY 後按「連線」。");
+      supabaseSetStatus("已中斷", "貼上 URL / KEY 後會自動連線，或按「連線」。");
     }
+  }
+
+  function installV165ISmartButtonFix(){
+    if(document.body?.dataset?.v165ISmartBound === "1") return;
+    if(document.body?.dataset) document.body.dataset.v165ISmartBound = "1";
+    document.addEventListener("click", function(e){
+      const openBtn = e.target.closest && e.target.closest("#openISmartModalBtn");
+      if(openBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+        openBtn.classList.remove("invalid");
+        const modal = $("iSmartModal");
+        if(modal) modal.classList.add("active");
+        setTimeout(() => $("iSmartText")?.focus(), 50);
+        return;
+      }
+      const closeBtn = e.target.closest && e.target.closest("#closeISmartModalBtn");
+      if(closeBtn){
+        e.preventDefault();
+        const modal = $("iSmartModal");
+        if(modal) modal.classList.remove("active");
+        return;
+      }
+      const saveBtn = e.target.closest && e.target.closest("#saveISmartTextBtn");
+      if(saveBtn){
+        e.preventDefault();
+        updateISmartPreview();
+        const modal = $("iSmartModal");
+        if(modal) modal.classList.remove("active");
+        queueAutoSaveCurrentRecord();
+        return;
+      }
+    }, true);
   }
 
 
@@ -12847,6 +12914,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   buildOpTable();
   bind();
   installV164SupabaseSync();
+  installV165ISmartButtonFix();
   installV135PendingBindings();
   installV138Enhancements();
   bindBuyerIdNoValidation();
@@ -12858,12 +12926,13 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     if($("supabaseTable")) $("supabaseTable").value = supa.table || "";
     if($("supabaseUserKey")) $("supabaseUserKey").value = supa.userKey || "";
   }catch(e){}
-  if(localStorage.getItem("M_FOLDER_SUPABASE_CONNECTED_MASTER") === "1"){
-    $("supabaseStatusText").textContent = "已連線";
-    $("supabaseSyncText").textContent = "本機與雲端已是最新狀態。";
+  if(supabaseHasConnection()){
+    localStorage.setItem(SUPABASE_CONNECTED_KEY, "1");
+    if($("supabaseStatusText")) $("supabaseStatusText").textContent = "已連線";
+    if($("supabaseSyncText")) $("supabaseSyncText").textContent = "已啟用自動連線，正在讀取雲端資料…";
   }else{
-    $("supabaseStatusText").textContent = "已中斷";
-    $("supabaseSyncText").textContent = "已停止同步";
+    if($("supabaseStatusText")) $("supabaseStatusText").textContent = "已中斷";
+    if($("supabaseSyncText")) $("supabaseSyncText").textContent = "已停止同步";
   }
   document.body.classList.add("isHomeView");
   installV116Enhancements();
