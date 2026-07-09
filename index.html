@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>M夾紀錄 V167｜回報主管備註・雲端上傳timeout修正版</title>
+<title>M夾紀錄 V177｜公司匯履保匯款憑證版</title>
 <style>
 :root{
   --page1:#eef7ff; --page2:#fff4f9; --ink:#243042; --muted:#68778d;
@@ -5557,6 +5557,239 @@ body.settingsOnlyMode .topActions .topSettingBtn{
   grid-template-columns:90px minmax(220px,1.1fr) minmax(220px,1.1fr) auto auto minmax(160px,1fr)!important;
 }
 
+
+/* V171：Supabase設定標題不切行 */
+#toggleSupabaseTitle .panelTitle,
+#toggleSupabaseTitle .panelSub,
+.supabaseTopTitle{
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+}
+#toggleSupabaseTitle{
+  flex-wrap:nowrap!important;
+}
+@media(max-width:520px){
+  #toggleSupabaseTitle .panelTitle{font-size:18px!important;}
+  #toggleSupabaseTitle .panelSub{font-size:12px!important;}
+}
+
+
+/* V172：Supabase 標題縮小防切字、同步文字置右並保留完整筆數 */
+#toggleSupabaseTitle .panelTitle{
+  font-size:16px!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+}
+#toggleSupabaseTitle .panelSub{
+  font-size:10.5px!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+}
+.supabaseTopTitle{
+  font-size:11px!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+  letter-spacing:0!important;
+  min-width:0!important;
+}
+.supabaseTopPanel{
+  grid-template-columns:78px minmax(190px,1fr) minmax(190px,1fr) auto auto minmax(360px,1.8fr)!important;
+}
+#supabaseSyncText.supabaseStatus{
+  width:100%!important;
+  justify-content:flex-end!important;
+  text-align:right!important;
+  font-size:10.5px!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+#supabaseStatusText.supabaseStatus{
+  font-size:10.5px!important;
+  white-space:nowrap!important;
+}
+@media(max-width:1280px){
+  .supabaseTopPanel{grid-template-columns:1fr!important;}
+  #supabaseSyncText.supabaseStatus{text-align:left!important;justify-content:flex-start!important;white-space:normal!important;}
+}
+
+
+/* V173：Supabase 設定整列平均單行；狀態靠右並顯示目前案件筆數 */
+.supabaseOuterPanel .panelBody{
+  overflow-x:auto!important;
+}
+.supabaseTopPanel{
+  display:grid!important;
+  grid-template-columns:82px minmax(300px,1.15fr) minmax(350px,1.25fr) 245px 64px minmax(390px,1.6fr)!important;
+  gap:8px!important;
+  align-items:center!important;
+  min-width:1475px!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:9px!important;
+}
+.supabaseTopTitle{
+  font-size:10.5px!important;
+  line-height:1.05!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  letter-spacing:0!important;
+}
+#supabaseUrl,
+#supabaseAnonKey{
+  height:34px!important;
+  font-size:12.5px!important;
+  padding:6px 9px!important;
+  min-width:0!important;
+}
+.supabaseButtons{
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:6px!important;
+  min-width:245px!important;
+  width:245px!important;
+}
+.supabaseButtons button{
+  height:34px!important;
+  min-width:0!important;
+  padding:6px 7px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  border-radius:10px!important;
+}
+#supabaseStatusText.supabaseStatus{
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  width:64px!important;
+  min-width:64px!important;
+  height:28px!important;
+  padding:2px 6px!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+#supabaseSyncText.supabaseStatus{
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+  width:100%!important;
+  min-width:390px!important;
+  height:28px!important;
+  padding:2px 8px!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  text-align:right!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+@media(max-width:1280px){
+  .supabaseTopPanel{
+    grid-template-columns:82px minmax(300px,1.15fr) minmax(350px,1.25fr) 245px 64px minmax(390px,1.6fr)!important;
+  }
+  #supabaseSyncText.supabaseStatus{
+    justify-content:flex-end!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+  }
+}
+
+
+
+/* V174：Supabase 同一排加大字、不溢出；成交金流公司匯履保按鈕 */
+.supabaseOuterPanel .panelBody{
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+}
+.supabaseTopPanel{
+  display:grid!important;
+  grid-template-columns:105px minmax(250px,1.1fr) minmax(310px,1.3fr) 235px 74px minmax(300px,1.25fr)!important;
+  gap:6px!important;
+  align-items:center!important;
+  min-width:1320px!important;
+  max-width:100%!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:8px!important;
+}
+.supabaseTopTitle{
+  font-size:14px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  overflow:hidden!important;
+}
+#supabaseUrl,
+#supabaseAnonKey{
+  height:38px!important;
+  font-size:14px!important;
+  padding:7px 9px!important;
+  min-width:0!important;
+  width:100%!important;
+}
+.supabaseButtons{
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:6px!important;
+  min-width:235px!important;
+  width:235px!important;
+}
+.supabaseButtons button{
+  height:38px!important;
+  padding:7px 7px!important;
+  font-size:14px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  border-radius:10px!important;
+}
+#supabaseStatusText.supabaseStatus{
+  width:74px!important;
+  min-width:74px!important;
+  height:32px!important;
+  font-size:13.5px!important;
+  line-height:1!important;
+  padding:3px 6px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+#supabaseSyncText.supabaseStatus{
+  width:100%!important;
+  min-width:300px!important;
+  height:32px!important;
+  font-size:13.5px!important;
+  line-height:1!important;
+  padding:3px 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  text-align:right!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+}
+.companyDealFlowBtn{
+  background:#fff8d9!important;
+  border-color:#dfbd55!important;
+  color:#8a6500!important;
+}
+
+
+/* V177：公司匯履保二聯式收據改為匯款憑證，確認動作用完成/否 */
+.companyEscrowFlowRow [data-deal-flow="receiptNo"]{background:#f2f5f9!important;color:#7b8794!important;}
+.companyVoucherActionWrap{grid-column:1 / -1!important;display:grid!important;grid-template-columns:88px 88px 70px 1fr!important;gap:8px!important;align-items:center!important;border:1px dashed #b8cada!important;border-radius:12px!important;background:#fff8fb!important;padding:8px!important;}
+.companyVoucherTitle{color:#24476b!important;font-size:13px!important;font-weight:900!important;text-align:center!important;white-space:nowrap!important;}
+.companyVoucherCheck{display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;height:34px!important;border:1px solid #c7d7e8!important;border-radius:10px!important;background:#fff!important;color:#344d67!important;font-size:13px!important;font-weight:900!important;}
+.companyVoucherCheck input{width:auto!important;height:auto!important;margin:0!important;}
+.companyVoucherActionWrap.invalid{border-color:#c9354c!important;background:#fff0f3!important;box-shadow:0 0 0 3px rgba(201,53,76,.10)!important;}
+@media(max-width:1200px){.companyVoucherActionWrap{grid-template-columns:1fr!important;}}
+
 </style>
 </head>
 <body>
@@ -5564,7 +5797,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
   <div class="topbar">
     <div class="brand">
       <div class="logo">M</div>
-      <h1>M夾紀錄 <span class="version">V163 紙條7.5公分・直接列印・左邊界0.5公分版</span></h1>
+      <h1>M夾紀錄 <span class="version" id="appVersionText">V177 公司匯履保匯款憑證版</span></h1>
     </div>
     <nav class="topActions">
       <button type="button" id="topNewCaseBtn" class="save homeOnlyTopBtn topNewBtn">新增案件</button>
@@ -6042,6 +6275,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
             <button type="button" class="addMini" data-add-deal-flow="退買方">＋退買方</button>
             <button type="button" class="addMini" data-add-deal-flow="轉服務費">＋轉服務費</button>
             <button type="button" class="addMini" data-add-deal-flow="本票業務領走" data-deal-type="本票">＋本票業務領走</button>
+            <button type="button" class="addMini companyDealFlowBtn" data-add-deal-flow="公司匯履保">＋公司匯履保</button>
           </div>
           <div class="dealFlowHint"></div>
           <div class="dealFlowList" id="dealFlowList"></div>
@@ -6113,6 +6347,16 @@ body.settingsOnlyMode .topActions .topSettingBtn{
       removeItem:k => { delete __mem[k]; }
     };
   }
+  const APP_VERSION = "V177";
+  const APP_VERSION_LABEL = "V177 公司匯履保匯款憑證版";
+  const APP_PAGE_TITLE = `M夾紀錄 ${APP_VERSION}｜公司匯履保匯款憑證版`;
+  function applyAppVersionTitle(){
+    document.title = APP_PAGE_TITLE;
+    const el = document.getElementById("appVersionText");
+    if(el) el.textContent = APP_VERSION_LABEL;
+  }
+  applyAppVersionTitle();
+
   const SAVE_KEY = "M_FOLDER_RECORDS_MASTER";
   const EMPTY_LOCK_KEY = "M_FOLDER_RECORDS_EMPTY_LOCK";
   const STAFF_KEY = "M_FOLDER_STAFF_MASTER";
@@ -7693,7 +7937,7 @@ body.settingsOnlyMode .topActions .topSettingBtn{
   }
 
   function exportJson(){
-    const data = {app:"M夾紀錄",version:"V154",exportedAt:nowText(),records,staff,flowRecipients,coworkerContacts:coworkerContactsRaw,smsTemplate:$("smsTemplate").value};
+    const data = {app:"M夾紀錄",version:APP_VERSION,exportedAt:nowText(),records,staff,flowRecipients,coworkerContacts:coworkerContactsRaw,smsTemplate:$("smsTemplate").value};
     const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const a = document.createElement("a");
     const d = new Date();
@@ -8078,9 +8322,13 @@ function moneySlipText(){
     return check > 0 && checkNote ? `${mainLine}
 支票號碼${checkNote}` : mainLine;
   }
-  function latestCashFlowFromForm(){
+  function initialCashFlowFromForm(){
     const rows = collectCashFlows(true).filter(x => x.date || x.to || x.note);
-    return rows.length ? rows[rows.length - 1] : null;
+    return rows.length ? rows[0] : null;
+  }
+  function latestCashFlowFromForm(){
+    // V171：收斡紙條／單據日期以「初次金流」為主，新增後續金流不改變列印內容。
+    return initialCashFlowFromForm();
   }
   function priceWanText(value){
     const raw = String(value || "").trim();
@@ -11360,7 +11608,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
       <input data-deal-flow="staff" placeholder="領取業務" value="${escapeHtml(row.staff || "")}" />
       <input data-deal-flow="receiptNo" placeholder="單據號碼(無可空白)" value="${escapeHtml(row.receiptNo || "")}" />
       <input data-deal-flow="receiptDate" placeholder="單據日期" value="${escapeHtml(row.receiptDate || "")}" />
-      <select data-deal-flow="twoReceipt"><option value="">請選擇</option>${DEAL_TWO_RECEIPT_OPTIONS_V129.map(x => `<option value="${x}" ${x===twoReceipt?"selected":""}>${x}</option>`).join("")}</select>
+      <select data-deal-flow="twoReceipt"><option value="">請選擇</option>${isCompany ? `<option value="已貼M夾封面" ${twoReceipt==="已貼M夾封面"?"selected":""}>已貼M夾封面</option>` : DEAL_TWO_RECEIPT_OPTIONS_V129.map(x => `<option value="${x}" ${x===twoReceipt?"selected":""}>${x}</option>`).join("")}</select>
       <button type="button" class="dealFlowDelete">刪除</button>
       <div class="dealFlowNoteWrap"><span class="dealFlowNoteLabel">備註</span><input data-deal-flow="note" placeholder="代書-孟鈴芸、代書-毛亮月" value="${escapeHtml(row.note || "")}" /></div>
     </div>`;
@@ -12653,7 +12901,18 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   }
   function supabaseSetStatus(status, syncText){
     if($("supabaseStatusText")) $("supabaseStatusText").textContent = status;
-    if($("supabaseSyncText")) $("supabaseSyncText").textContent = syncText;
+    if($("supabaseSyncText")){
+      let text = String(syncText || "");
+      const countText = `目前共 ${records.length} 筆資料`;
+      if(text && !text.includes("目前共") && /(上傳|同步|更新|讀取|套用|空白|建立)/.test(text)){
+        if(/（[^）]*）$/.test(text)){
+          text = text.replace(/）$/, `｜${countText}）`);
+        }else{
+          text = `${text}｜${countText}`;
+        }
+      }
+      $("supabaseSyncText").textContent = text;
+    }
   }
   function supabasePersistSettings(){
     const url = supabaseNormalizeUrl($("supabaseUrl")?.value || SUPABASE_DEFAULT_URL);
@@ -12687,7 +12946,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   function supabaseCollectState(){
     return {
       app:"m_folder",
-      schemaVersion:167,
+      schemaVersion:176,
       savedAt:new Date().toISOString(),
       records: Array.isArray(records) ? records : [],
       staff: Array.isArray(staff) ? staff : [],
@@ -12804,7 +13063,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
         supabaseLastCloudUpdatedAt = row.updated_at || supabaseLastCloudUpdatedAt;
         if(row.data && !supabaseIsEmptyData(row.data)){
           supabaseApplyState(row.data);
-          supabaseSetStatus("已連線", `雲端已更新（${records.length}筆｜${nowTextAD()}）`);
+          supabaseSetStatus("已連線", `雲端已更新（${nowTextAD()}）`);
         }
       }else if(row.updated_at && !supabaseLastCloudUpdatedAt){
         supabaseLastCloudUpdatedAt = row.updated_at;
@@ -12890,7 +13149,7 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     try{
       await supabaseUpsertState("手動立即同步");
       supabaseStartAutoPull();
-      supabaseSetStatus("已連線", `已同步到雲端（${records.length}筆｜${nowTextAD()}）`);
+      supabaseSetStatus("已連線", `已同步到雲端（${nowTextAD()}）`);
     }catch(e){
       console.error(e);
       supabaseSetStatus("同步失敗", e.message || "Supabase 同步失敗");
@@ -13063,6 +13322,450 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
     if($("supabaseStatusText")) $("supabaseStatusText").textContent = "已中斷";
     if($("supabaseSyncText")) $("supabaseSyncText").textContent = "已停止同步";
   }
+
+
+  /* V174：Supabase 狀態文字縮短加大；成交金流新增公司匯履保 */
+  function v174SupabaseSyncText(syncText){
+    let text = String(syncText || "").trim();
+    const countText = `目前共 ${records.length} 筆資料`;
+    if(!text) return "";
+    text = text.replace(/（\s*\d+\s*筆\s*）/g, "");
+    text = text.replace(/，?之後修改會自動同步。?/g, "");
+    text = text.replace(/\s*｜\s*目前共\s*\d+\s*筆資料/g, "");
+    if(/(上傳|同步|更新|讀取|套用|空白|建立|啟用|停止|中斷|連線)/.test(text)){
+      text = `${text}｜${countText}`;
+    }
+    return text;
+  }
+  supabaseSetStatus = function(status, syncText){
+    if($("supabaseStatusText")) $("supabaseStatusText").textContent = status;
+    if($("supabaseSyncText")) $("supabaseSyncText").textContent = v174SupabaseSyncText(syncText);
+  };
+
+  const DEAL_COMPANY_ESCROW_ACTION_V174 = "公司匯履保";
+  const DEAL_COMPANY_ESCROW_TYPE_V174 = "";
+  function v174IsCompanyEscrowDealFlow(data){
+    return String(data?.action || "").trim() === DEAL_COMPANY_ESCROW_ACTION_V174;
+  }
+  function v174DealMoneyTypeOptions(selected){
+    return ["現金","支票","本票","現金+支票","現金+本票"]
+      .map(x => `<option value="${x}" ${x===selected?"selected":""}>${x}</option>`).join("");
+  }
+  function v174DealActionOptions(selected){
+    return ["轉簽約金","退買方","轉服務費","本票業務領走",DEAL_COMPANY_ESCROW_ACTION_V174]
+      .map(x => `<option value="${x}" ${x===selected?"selected":""}>${x}</option>`).join("");
+  }
+  const _v174DealFlowRowHtmlBase = dealFlowRowHtml;
+  dealFlowRowHtml = function(row={}){
+    const action = row.action || "轉簽約金";
+    const isCompany = v174IsCompanyEscrowDealFlow(row) || action === DEAL_COMPANY_ESCROW_ACTION_V174;
+    const moneyType = row.moneyType || row.type || "現金";
+    const twoReceipt = isCompany ? "" : (typeof v129NormalizeTwoReceipt === "function" ? v129NormalizeTwoReceipt(row.twoReceipt, action) : (row.twoReceipt || ""));
+    const staff = row.staff || (isCompany ? "公司帳戶" : "");
+    const receiptNoPlaceholder = isCompany ? "匯款憑證號/後五碼(可空白)" : "單據號碼(無可空白)";
+    const receiptDatePlaceholder = isCompany ? "匯款日期" : "單據日期";
+    const notePlaceholder = isCompany ? "匯款備註" : "代書-孟鈴芸、代書-毛亮月";
+    return `<div class="dealFlowRow ${isCompany ? "companyEscrowFlowRow" : ""}">
+      <select data-deal-flow="moneyType">${v174DealMoneyTypeOptions(moneyType)}</select>
+      <input data-deal-flow="amount" inputmode="decimal" placeholder="金額(萬)" value="${escapeHtml(row.amount || "")}" />
+      <select data-deal-flow="action">${v174DealActionOptions(action)}</select>
+      <input data-deal-flow="staff" placeholder="${isCompany ? "公司帳戶" : "領取業務"}" value="${escapeHtml(staff)}" />
+      <input data-deal-flow="receiptNo" placeholder="${receiptNoPlaceholder}" value="${escapeHtml(row.receiptNo || "")}" />
+      <input data-deal-flow="receiptDate" placeholder="${receiptDatePlaceholder}" value="${escapeHtml(row.receiptDate || "")}" />
+      <select data-deal-flow="twoReceipt"><option value="">${isCompany ? "匯款憑證" : "請選擇"}</option>${isCompany ? `<option value="已貼M夾封面" ${twoReceipt==="已貼M夾封面"?"selected":""}>已貼M夾封面</option>` : DEAL_TWO_RECEIPT_OPTIONS_V129.map(x => `<option value="${x}" ${x===twoReceipt?"selected":""}>${x}</option>`).join("")}</select>
+      <button type="button" class="dealFlowDelete">刪除</button>
+      <div class="dealFlowNoteWrap"><span class="dealFlowNoteLabel">備註</span><input data-deal-flow="note" placeholder="${notePlaceholder}" value="${escapeHtml(row.note || "")}" /></div>
+    </div>`;
+  };
+  v129DealFlowNeedsTwoReceipt = function(data){
+    if(v174IsCompanyEscrowDealFlow(data)) return false;
+    return data.action === "轉簽約金" && ((data.moneyType || "").includes("現金") || (data.moneyType || "").includes("支票"));
+  };
+  v129DealFlowHasReceipt = function(data){
+    if(v174IsCompanyEscrowDealFlow(data)) return !!String(data.receiptDate || "").trim();
+    return !!String(data.receiptNo || "").trim();
+  };
+  function v174NormalizeCompanyEscrowRow(row){
+    const actionEl = row.querySelector('[data-deal-flow="action"]');
+    const typeEl = row.querySelector('[data-deal-flow="moneyType"]');
+    const staffEl = row.querySelector('[data-deal-flow="staff"]');
+    const twoEl = row.querySelector('[data-deal-flow="twoReceipt"]');
+    const receiptDateEl = row.querySelector('[data-deal-flow="receiptDate"]');
+    const receiptNoEl = row.querySelector('[data-deal-flow="receiptNo"]');
+    const noteEl = row.querySelector('[data-deal-flow="note"]');
+    const data = {action:actionEl?.value || "", moneyType:typeEl?.value || ""};
+    const isCompany = v174IsCompanyEscrowDealFlow(data);
+    row.classList.toggle("companyEscrowFlowRow", isCompany);
+    if(isCompany){
+      if(actionEl) actionEl.value = DEAL_COMPANY_ESCROW_ACTION_V174;
+            if(staffEl && !String(staffEl.value || "").trim()) staffEl.value = "公司帳戶";
+      if(twoEl) twoEl.value = "";
+      if(staffEl) staffEl.placeholder = "公司帳戶";
+      if(receiptNoEl) receiptNoEl.placeholder = "不用填寫";
+      if(receiptDateEl) receiptDateEl.placeholder = "匯款日期";
+      if(noteEl) noteEl.placeholder = "匯款憑證已貼M夾封面／銀行後五碼";
+    }else{
+      if(staffEl) staffEl.placeholder = "領取業務";
+      if(receiptNoEl) receiptNoEl.placeholder = "單據號碼(無可空白)";
+      if(receiptDateEl) receiptDateEl.placeholder = "單據日期";
+      if(noteEl) noteEl.placeholder = "代書-孟鈴芸、代書-毛亮月";
+    }
+  }
+  const _v174RenderDealFlowRowsBase = renderDealFlowRows;
+  renderDealFlowRows = function(rows=[]){
+    _v174RenderDealFlowRowsBase(rows);
+    document.querySelectorAll(".dealFlowRow").forEach(v174NormalizeCompanyEscrowRow);
+  };
+  function v174ValidateDealFlowRowData(row, msgList){
+    const get = k => row.querySelector(`[data-deal-flow="${k}"]`);
+    ["amount","staff","receiptNo","receiptDate","twoReceipt"].forEach(k => get(k)?.classList.remove("invalid"));
+    const data = {
+      moneyType:get("moneyType")?.value || "現金",
+      amount:get("amount")?.value?.trim() || "",
+      action:get("action")?.value || "轉簽約金",
+      staff:get("staff")?.value?.trim() || "",
+      receiptNo:get("receiptNo")?.value?.trim() || "",
+      receiptDate:get("receiptDate")?.value?.trim() || "",
+      twoReceipt:get("twoReceipt")?.value || "",
+      note:get("note")?.value?.trim() || ""
+    };
+    const defaultEmpty = data.moneyType === "現金" && data.action === "轉簽約金" && !data.amount && !data.staff && !data.receiptNo && !data.receiptDate && !data.twoReceipt && !data.note;
+    const hasMeaning = Object.values(data).some(v => String(v || "").trim()) && !defaultEmpty;
+    if(!hasMeaning) return {hasMeaning:false, ok:true};
+    const isCompany = v174IsCompanyEscrowDealFlow(data);
+    let ok = true;
+    if(v116MoneyNumValue(data.amount) <= 0){ get("amount")?.classList.add("invalid"); ok = false; }
+    if(!isCompany && !data.staff){ get("staff")?.classList.add("invalid"); ok = false; }
+    if(isCompany){
+      if(!data.twoReceipt){ get("twoReceipt")?.classList.add("invalid"); ok = false; }
+      if(!data.receiptDate){ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      else{
+        const parsed = parseRocDate(data.receiptDate);
+        if(parsed.ok && parsed.value) get("receiptDate").value = parsed.value;
+        else{ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      }
+      return {hasMeaning:true, ok};
+    }
+    if(data.receiptNo){
+      if(!data.receiptDate){ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      else{
+        const parsed = parseRocDate(data.receiptDate);
+        if(parsed.ok && parsed.value) get("receiptDate").value = parsed.value;
+        else{ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      }
+    }else if(data.receiptDate){
+      const parsed = parseRocDate(data.receiptDate);
+      if(parsed.ok && parsed.value) get("receiptDate").value = parsed.value;
+      else{ get("receiptDate")?.classList.add("invalid"); ok = false; }
+    }
+    if(v129DealFlowNeedsTwoReceipt(data) && !data.twoReceipt){ get("twoReceipt")?.classList.add("invalid"); ok = false; }
+    return {hasMeaning:true, ok};
+  }
+  validateDealFlows = function(){
+    if(currentArchiveType === "成交" && !document.querySelector(".dealFlowRow")){
+      $("dealFlowList")?.classList.add("invalid");
+      alert("成交金流為必填，請至少新增一筆成交金流。");
+      return false;
+    }
+    $("dealFlowList")?.classList.remove("invalid");
+    let ok = true, meaningfulCount = 0;
+    document.querySelectorAll(".dealFlowRow").forEach(row => {
+      v174NormalizeCompanyEscrowRow(row);
+      const result = v174ValidateDealFlowRowData(row, []);
+      if(result.hasMeaning) meaningfulCount++;
+      if(!result.ok) ok = false;
+    });
+    if(!meaningfulCount){
+      $("dealFlowList")?.classList.add("invalid");
+      ok = false;
+    }
+    if(!ok) alert("成交金流請確認：一般金流金額、領取業務必填；有單據號碼才需單據日期。公司匯履保只需金額與匯款日期，匯款憑證請貼M夾封面。");
+    return ok;
+  };
+  v134DealFlowRowsValid = function(msgList){
+    if(currentArchiveType !== "成交") return true;
+    const rows = Array.from(document.querySelectorAll(".dealFlowRow"));
+    if(!rows.length){
+      $("dealFlowList")?.classList.add("invalid");
+      msgList.push("成交金流至少要新增一筆");
+      return false;
+    }
+    let ok = true, meaningfulCount = 0;
+    rows.forEach(row => {
+      v174NormalizeCompanyEscrowRow(row);
+      const result = v174ValidateDealFlowRowData(row, msgList);
+      if(result.hasMeaning) meaningfulCount++;
+      if(!result.ok) ok = false;
+    });
+    if(!meaningfulCount){
+      $("dealFlowList")?.classList.add("invalid");
+      msgList.push("成交金流至少要填寫一筆完整資料");
+      ok = false;
+    }
+    if(!ok) msgList.push("成交金流資料未齊全：公司匯履保請填金額與匯款日期，匯款憑證貼M夾封面");
+    return ok;
+  };
+  const _v174DealFlowHomeLastHtmlBase = dealFlowHomeLastHtml;
+  dealFlowHomeLastHtml = function(r){
+    const d = latestDealFlow(r);
+    if(d && v174IsCompanyEscrowDealFlow(d)){
+      const dateShort = v126DealFlowDateShort(d.receiptDate);
+      const line1 = DEAL_COMPANY_ESCROW_ACTION_V174;
+      const line2 = [`公司帳戶`, d.receiptNo || "匯款憑證", dateShort ? "-" + dateShort : ""].filter(Boolean).join("");
+      return `<span class="flowLineTo">${escapeHtml(line1)}</span><span class="flowLineDate small">${escapeHtml(line2)}</span>`;
+    }
+    return _v174DealFlowHomeLastHtmlBase(r);
+  };
+  homeFinalFlowHtml = function(r){
+    return dealFlowHomeLastHtml(r) || flowHomeLastHtml(latestCashFlow(r));
+  };
+  const _v174ArchiveFlowTextBase = archiveFlowText;
+  archiveFlowText = function(r){
+    if(r?.archiveInfo?.type === "成交" && latestDealFlow(r)) return dealFlowHomeLastHtml(r);
+    return _v174ArchiveFlowTextBase(r);
+  };
+  archiveFlowTwoLineHtml = archiveFlowText;
+
+  /* V175：歸檔列表金流日期規則
+     成交：顯示成交金流；退斡：優先退買方日期，其次業務領走日期；末定：顯示議價結束隔天。 */
+  function v175TypeText(r){
+    return String(((r || {}).archiveInfo || {}).type || "").trim();
+  }
+  function v175RocDateFromDateObject(dt){
+    if(!(dt instanceof Date) || !Number.isFinite(dt.getTime())) return "";
+    return `${dt.getFullYear() - 1911}/${dt.getMonth() + 1}/${dt.getDate()}`;
+  }
+  function v175AddOneDayRocText(raw){
+    const text = String(raw || "").trim();
+    if(!text) return "";
+    const parsed = parseRocDate(text.split(/\s+/)[0]);
+    if(!parsed.ok || !parsed.date) return "";
+    const dt = new Date(parsed.date.getTime());
+    dt.setDate(dt.getDate() + 1);
+    return v175RocDateFromDateObject(dt);
+  }
+  function v175PendingNextDate(r){
+    const snap = latestChangeSnapshot(r || {});
+    return v175AddOneDayRocText(snap.validEnd || (r || {}).validEnd || "");
+  }
+  function v175ArchiveDateText(r){
+    const info = ((r || {}).archiveInfo) || {};
+    const type = v175TypeText(r);
+    if(type === "成交"){
+      const deal = latestDealFlow(r);
+      return (deal && deal.receiptDate) || info.dealDate || (r || {}).archivedAt || "";
+    }
+    if(type === "退斡"){
+      return info.returnBuyerDate || info.takeDepositDate || (r || {}).archivedAt || "";
+    }
+    if(type === "未定" || type === "末定"){
+      return v175PendingNextDate(r) || (r || {}).archivedAt || "";
+    }
+    return (r || {}).archivedAt || "";
+  }
+  v135ArchiveSortDateText = v175ArchiveDateText;
+
+  function v175ArchiveFlowCellHtml(r){
+    const info = ((r || {}).archiveInfo) || {};
+    const type = v175TypeText(r);
+    if(type === "成交"){
+      const html = dealFlowHomeLastHtml(r);
+      return html || `<span class="small">成交金流未填</span>`;
+    }
+    if(type === "退斡"){
+      const date = info.returnBuyerDate || info.takeDepositDate || "";
+      const label = info.returnBuyerDate ? "退買方日期" : (info.takeDepositDate ? "業務領走日期" : "退斡日期未填");
+      return `<span class="flowLineTo">${escapeHtml(label)}</span>${date ? `<span class="flowLineDate small">${escapeHtml(date)}</span>` : ""}`;
+    }
+    if(type === "未定" || type === "末定"){
+      const date = v175PendingNextDate(r);
+      return `<span class="flowLineTo">議價結束隔天</span>${date ? `<span class="flowLineDate small">${escapeHtml(date)}</span>` : `<span class="flowLineDate small">未填議價結束日</span>`}`;
+    }
+    return flowHomeLastHtml(latestCashFlow(r), "");
+  }
+  function v175ArchiveFlowPlainText(r){
+    const info = ((r || {}).archiveInfo) || {};
+    const type = v175TypeText(r);
+    if(type === "成交") return `成交金流 ${plainDealFlowText(r)}`;
+    if(type === "退斡") return `退斡 ${info.returnBuyerDate ? "退買方日期 " + info.returnBuyerDate : ""} ${info.takeDepositDate ? "業務領走日期 " + info.takeDepositDate : ""}`;
+    if(type === "未定" || type === "末定") return `末定 議價結束隔天 ${v175PendingNextDate(r)}`;
+    const flow = latestCashFlow(r);
+    return flow ? `${flow.to || ""} ${flow.date || ""} ${flow.note || ""}` : "";
+  }
+  const _v175PlainArchiveFlowTextBase = v135PlainArchiveFlowText;
+  v135PlainArchiveFlowText = function(r){
+    return [v175ArchiveFlowPlainText(r), _v175PlainArchiveFlowTextBase(r)].filter(Boolean).join(" ");
+  };
+  v142ArchiveFlowCellHtml = v175ArchiveFlowCellHtml;
+  archiveFlowTwoLineHtml = v175ArchiveFlowCellHtml;
+
+
+  /* V177：公司匯履保＝二聯式收據只顯示「匯款憑證」；確認欄為「完成 / 否 / 備註欄」 */
+  function v177CompanyVoucherStatus(row){
+    return row?.querySelector('[data-deal-flow="voucherStatus"]:checked')?.value || "";
+  }
+  function v177CompanyVoucherStatusFromData(row){
+    const raw = String(row?.voucherStatus || "").trim();
+    if(raw) return raw;
+    const old = String(row?.twoReceipt || "").trim();
+    if(old === "已貼M夾封面" || old === "完成") return "完成";
+    if(old === "否") return "否";
+    return "";
+  }
+  function v177CompanyVoucherWrap(status, note){
+    const uid = "v177Voucher_" + Math.random().toString(36).slice(2, 10);
+    return `<div class="companyVoucherActionWrap" data-company-voucher-wrap>
+      <span class="companyVoucherTitle">匯款憑證</span>
+      <label class="companyVoucherCheck"><input type="radio" name="${uid}" data-deal-flow="voucherStatus" value="完成" ${status === "完成" ? "checked" : ""}>完成</label>
+      <label class="companyVoucherCheck"><input type="radio" name="${uid}" data-deal-flow="voucherStatus" value="否" ${status === "否" ? "checked" : ""}>否</label>
+      <div class="dealFlowNoteWrap" style="grid-column:auto!important;margin:0!important;"><span class="dealFlowNoteLabel">備註欄</span><input data-deal-flow="note" placeholder="例如：憑證已貼M夾封面 / 待補憑證原因" value="${escapeHtml(note || "")}" /></div>
+    </div>`;
+  }
+  dealFlowRowHtml = function(row={}){
+    const action = row.action || "轉簽約金";
+    const isCompany = v174IsCompanyEscrowDealFlow(row) || action === DEAL_COMPANY_ESCROW_ACTION_V174;
+    const moneyType = row.moneyType || row.type || "現金";
+    if(isCompany){
+      const status = v177CompanyVoucherStatusFromData(row);
+      return `<div class="dealFlowRow companyEscrowFlowRow">
+        <select data-deal-flow="moneyType">${v174DealMoneyTypeOptions(moneyType)}</select>
+        <input data-deal-flow="amount" inputmode="decimal" placeholder="金額(萬)" value="${escapeHtml(row.amount || "")}" />
+        <select data-deal-flow="action">${v174DealActionOptions(DEAL_COMPANY_ESCROW_ACTION_V174)}</select>
+        <input data-deal-flow="staff" placeholder="公司帳戶" value="公司帳戶" readonly />
+        <input data-deal-flow="receiptNo" placeholder="不用填寫" value="" readonly />
+        <input data-deal-flow="receiptDate" placeholder="匯款日期" value="${escapeHtml(row.receiptDate || "")}" />
+        <select data-deal-flow="twoReceipt"><option value="匯款憑證" selected>匯款憑證</option></select>
+        <button type="button" class="dealFlowDelete">刪除</button>
+        ${v177CompanyVoucherWrap(status, row.note || "")}
+      </div>`;
+    }
+    const twoReceipt = typeof v129NormalizeTwoReceipt === "function" ? v129NormalizeTwoReceipt(row.twoReceipt, action) : (row.twoReceipt || "");
+    return `<div class="dealFlowRow">
+      <select data-deal-flow="moneyType">${v174DealMoneyTypeOptions(moneyType)}</select>
+      <input data-deal-flow="amount" inputmode="decimal" placeholder="金額(萬)" value="${escapeHtml(row.amount || "")}" />
+      <select data-deal-flow="action">${v174DealActionOptions(action)}</select>
+      <input data-deal-flow="staff" placeholder="領取業務" value="${escapeHtml(row.staff || "")}" />
+      <input data-deal-flow="receiptNo" placeholder="單據號碼(無可空白)" value="${escapeHtml(row.receiptNo || "")}" />
+      <input data-deal-flow="receiptDate" placeholder="單據日期" value="${escapeHtml(row.receiptDate || "")}" />
+      <select data-deal-flow="twoReceipt"><option value="">請選擇</option>${DEAL_TWO_RECEIPT_OPTIONS_V129.map(x => `<option value="${x}" ${x===twoReceipt?"selected":""}>${x}</option>`).join("")}</select>
+      <button type="button" class="dealFlowDelete">刪除</button>
+      <div class="dealFlowNoteWrap"><span class="dealFlowNoteLabel">備註</span><input data-deal-flow="note" placeholder="代書-孟鈴芸、代書-毛亮月" value="${escapeHtml(row.note || "")}" /></div>
+    </div>`;
+  };
+  v174NormalizeCompanyEscrowRow = function(row){
+    const actionEl = row.querySelector('[data-deal-flow="action"]');
+    const staffEl = row.querySelector('[data-deal-flow="staff"]');
+    const twoEl = row.querySelector('[data-deal-flow="twoReceipt"]');
+    const receiptDateEl = row.querySelector('[data-deal-flow="receiptDate"]');
+    const receiptNoEl = row.querySelector('[data-deal-flow="receiptNo"]');
+    const noteEl = row.querySelector('[data-deal-flow="note"]');
+    const isCompany = String(actionEl?.value || "").trim() === DEAL_COMPANY_ESCROW_ACTION_V174;
+    row.classList.toggle("companyEscrowFlowRow", isCompany);
+    if(isCompany){
+      if(staffEl){ staffEl.value = "公司帳戶"; staffEl.placeholder = "公司帳戶"; staffEl.readOnly = true; }
+      if(receiptNoEl){ receiptNoEl.value = ""; receiptNoEl.placeholder = "不用填寫"; receiptNoEl.readOnly = true; }
+      if(receiptDateEl) receiptDateEl.placeholder = "匯款日期";
+      if(twoEl){ twoEl.innerHTML = '<option value="匯款憑證" selected>匯款憑證</option>'; twoEl.value = "匯款憑證"; }
+      if(!row.querySelector('[data-company-voucher-wrap]')){
+        row.insertAdjacentHTML("beforeend", v177CompanyVoucherWrap("", noteEl?.value || ""));
+        if(noteEl && !noteEl.closest('[data-company-voucher-wrap]')) noteEl.closest('.dealFlowNoteWrap')?.remove();
+      }
+    }else{
+      if(staffEl){ staffEl.placeholder = "領取業務"; staffEl.readOnly = false; }
+      if(receiptNoEl){ receiptNoEl.placeholder = "單據號碼(無可空白)"; receiptNoEl.readOnly = false; }
+      if(receiptDateEl) receiptDateEl.placeholder = "單據日期";
+    }
+  };
+  collectDealFlowRows = function(includeEmpty=false){
+    return Array.from(document.querySelectorAll(".dealFlowRow")).map(row => {
+      v174NormalizeCompanyEscrowRow(row);
+      const action = row.querySelector('[data-deal-flow="action"]')?.value || "轉簽約金";
+      const isCompany = action === DEAL_COMPANY_ESCROW_ACTION_V174;
+      const data = {
+        moneyType: row.querySelector('[data-deal-flow="moneyType"]')?.value || "現金",
+        amount: row.querySelector('[data-deal-flow="amount"]')?.value?.trim() || "",
+        action,
+        staff: isCompany ? "公司帳戶" : (row.querySelector('[data-deal-flow="staff"]')?.value?.trim() || ""),
+        receiptNo: isCompany ? "" : (row.querySelector('[data-deal-flow="receiptNo"]')?.value?.trim() || ""),
+        receiptDate: row.querySelector('[data-deal-flow="receiptDate"]')?.value?.trim() || "",
+        twoReceipt: isCompany ? "匯款憑證" : (row.querySelector('[data-deal-flow="twoReceipt"]')?.value || ""),
+        voucherStatus: isCompany ? v177CompanyVoucherStatus(row) : "",
+        note: row.querySelector('[data-deal-flow="note"]')?.value?.trim() || ""
+      };
+      return data;
+    }).filter(r => includeEmpty || Object.values(r).some(v => String(v || "").trim()) && !(r.moneyType === "現金" && r.action === "轉簽約金" && !r.amount && !r.staff && !r.receiptNo && !r.receiptDate && !r.twoReceipt && !r.note));
+  };
+  v174ValidateDealFlowRowData = function(row, msgList){
+    const get = k => row.querySelector(`[data-deal-flow="${k}"]`);
+    ["amount","staff","receiptNo","receiptDate","twoReceipt"].forEach(k => get(k)?.classList.remove("invalid"));
+    row.querySelector('[data-company-voucher-wrap]')?.classList.remove("invalid");
+    const data = {
+      moneyType:get("moneyType")?.value || "現金",
+      amount:get("amount")?.value?.trim() || "",
+      action:get("action")?.value || "轉簽約金",
+      staff:get("staff")?.value?.trim() || "",
+      receiptNo:get("receiptNo")?.value?.trim() || "",
+      receiptDate:get("receiptDate")?.value?.trim() || "",
+      twoReceipt:get("twoReceipt")?.value || "",
+      voucherStatus:v177CompanyVoucherStatus(row),
+      note:get("note")?.value?.trim() || ""
+    };
+    const defaultEmpty = data.moneyType === "現金" && data.action === "轉簽約金" && !data.amount && !data.staff && !data.receiptNo && !data.receiptDate && !data.twoReceipt && !data.note;
+    const hasMeaning = Object.values(data).some(v => String(v || "").trim()) && !defaultEmpty;
+    if(!hasMeaning) return {hasMeaning:false, ok:true};
+    const isCompany = v174IsCompanyEscrowDealFlow(data);
+    let ok = true;
+    if(v116MoneyNumValue(data.amount) <= 0){ get("amount")?.classList.add("invalid"); ok = false; }
+    if(isCompany){
+      if(get("staff")) get("staff").value = "公司帳戶";
+      if(get("twoReceipt")) get("twoReceipt").value = "匯款憑證";
+      if(!data.receiptDate){ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      else{
+        const parsed = parseRocDate(data.receiptDate);
+        if(parsed.ok && parsed.value) get("receiptDate").value = parsed.value;
+        else{ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      }
+      if(!data.voucherStatus){ row.querySelector('[data-company-voucher-wrap]')?.classList.add("invalid"); ok = false; }
+      return {hasMeaning:true, ok};
+    }
+    if(!data.staff){ get("staff")?.classList.add("invalid"); ok = false; }
+    if(data.receiptNo){
+      if(!data.receiptDate){ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      else{
+        const parsed = parseRocDate(data.receiptDate);
+        if(parsed.ok && parsed.value) get("receiptDate").value = parsed.value;
+        else{ get("receiptDate")?.classList.add("invalid"); ok = false; }
+      }
+    }else if(data.receiptDate){
+      const parsed = parseRocDate(data.receiptDate);
+      if(parsed.ok && parsed.value) get("receiptDate").value = parsed.value;
+      else{ get("receiptDate")?.classList.add("invalid"); ok = false; }
+    }
+    if(v129DealFlowNeedsTwoReceipt(data) && !data.twoReceipt){ get("twoReceipt")?.classList.add("invalid"); ok = false; }
+    return {hasMeaning:true, ok};
+  };
+  const _v177DealFlowHomeLastHtmlBase = dealFlowHomeLastHtml;
+  dealFlowHomeLastHtml = function(r){
+    const d = latestDealFlow(r);
+    if(d && v174IsCompanyEscrowDealFlow(d)){
+      const dateShort = v126DealFlowDateShort(d.receiptDate);
+      const status = d.voucherStatus ? `｜${d.voucherStatus}` : "";
+      return `<span class="flowLineTo">${escapeHtml(DEAL_COMPANY_ESCROW_ACTION_V174)}</span><span class="flowLineDate small">${escapeHtml(`公司帳戶｜匯款憑證${status}${dateShort ? "-" + dateShort : ""}`)}</span>`;
+    }
+    return _v177DealFlowHomeLastHtmlBase(r);
+  };
+  homeFinalFlowHtml = function(r){return dealFlowHomeLastHtml(r) || flowHomeLastHtml(latestCashFlow(r));};
+  archiveFlowTwoLineHtml = function(r){
+    if(r?.archiveInfo?.type === "成交" && latestDealFlow(r)) return dealFlowHomeLastHtml(r);
+    return v175ArchiveFlowCellHtml(r);
+  };
+
+
+  document.addEventListener("change", e => {
+    const row = e.target.closest && e.target.closest(".dealFlowRow");
+    if(row) v174NormalizeCompanyEscrowRow(row);
+  }, true);
+
   document.body.classList.add("isHomeView");
   installV116Enhancements();
   installV117Enhancements();
