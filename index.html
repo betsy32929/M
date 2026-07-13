@@ -7101,6 +7101,21 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   const SUPABASE_DEFAULT_ANON_KEY = "sb_publishable_ltaNA7nnVozoSCOcZIjg";
   const SUPABASE_DISABLED_KEY = "M_FOLDER_SUPABASE_DISABLED_MASTER";
   const SUPABASE_CONNECTED_KEY = "M_FOLDER_SUPABASE_CONNECTED_MASTER";
+
+  // 一次性搬移：將瀏覽器中保存的舊 M 專案連線改到 deal-progress。
+  (function migrateMFolderSupabaseProject(){
+    try{
+      const saved = JSON.parse(localStorage.getItem("M_FOLDER_SUPABASE_SETTINGS_MASTER") || "{}");
+      if(String(saved.url || "").includes("oiywtmjbasoonfuxemtr")){
+        saved.url = SUPABASE_DEFAULT_URL;
+        saved.anonKey = SUPABASE_DEFAULT_ANON_KEY;
+        saved.table = SUPABASE_FIXED_TABLE;
+        saved.userKey = SUPABASE_FIXED_ROW_ID;
+        localStorage.setItem("M_FOLDER_SUPABASE_SETTINGS_MASTER", JSON.stringify(saved));
+        localStorage.removeItem(SUPABASE_DISABLED_KEY);
+      }
+    }catch(e){}
+  })();
   let supabaseIsApplyingCloud = false;
   let supabasePushTimer = null;
   let supabaseIsPushing = false;
