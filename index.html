@@ -7293,8 +7293,9 @@ ____議價書賣方聯單存檔、___銷售名片、流通單____________`;
   }
   function supabaseStartAutoPull(){
     clearInterval(supabasePullTimer);
-    if(!supabaseHasConnection()) return;
-    supabasePullTimer = setInterval(supabasePullLatestIfChanged, 2000);
+    // 停用週期性雲端查詢，避免即使資料未變更也反覆下載整包資料、消耗 Egress。
+    // 雲端資料只會在開啟頁面或按「連線」時讀取一次；本機修改仍由 queueSupabasePush 立即上傳。
+    supabasePullTimer = null;
   }
   function supabaseStopAutoPull(){
     clearInterval(supabasePullTimer);
